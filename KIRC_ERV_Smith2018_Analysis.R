@@ -96,78 +96,35 @@ ggplot(tmp, aes(x=SETD2_lvl, y=mean, fill=SETD2_lvl)) + scale_fill_manual(values
 
 ###########################################################################################
 
-# Genes involved in RIG-I/MDA5 mediated induction of IFN-alpha/beta pathways
-# from http://software.broadinstitute.org/gsea/msigdb/cards/REACTOME_RIG_I_MDA5_MEDIATED_INDUCTION_OF_IFN_ALPHA_BETA_PATHWAYS.html 
+# Genes involved in KEGG_RIG_I_LIKE_RECEPTOR_SIGNALING_PATHWAY
+tum <- read.delim("KIRC_RNA_Final-Highlow.txt",head=TRUE,sep="\t")
+head(tum)
 
-wdir="C:/Users/Hemant Gujar/Desktop/Kidney_cancer/KIRC/RNASeq_EData/analysis/hERV"
+row.names(tum) <- tum[,1]
 
-KIRC_cpm <- read.table("C:/Users/Hemant Gujar/Desktop/Kidney_cancer/KIRC/RNASeq_EData/analysis/tables/KIRC_cpm.tsv", sep="\t", header=T)
+data <-tum[,c(2:233)]
+head (data)
 
-KIRC_metadata <- read.table("C:/Users/Hemant Gujar/Desktop/Kidney_cancer/KIRC/RNASeq_EData/metadata/KIRC_metadata_S.csv", sep = ",", header = T)
-samples <- as.character(KIRC_metadata$TCGA_ID)
-samples <- gsub(".{1}$", "", samples)                            # subsitute last character in the string
-samples <- samples[!duplicated(samples)]
+data <- as.matrix (data)
+#a <- data[,c(2,3)]
+b <- scale(t(data))
 
-lowSETD2 <- as.character(KIRC_metadata[(KIRC_metadata$SETD2_lvl == "low"),"TCGA_ID"])
-lowSETD2 <- lowSETD2[!duplicated(lowSETD2)]
-length(lowSETD2)
-lowSETD2 <- KIRC_cpm[,lowSETD2]
-dim(lowSETD2)
 
-highSETD2 <- as.character(KIRC_metadata[(KIRC_metadata$SETD2_lvl == "high"),"TCGA_ID"])
-highSETD2 <- highSETD2[!duplicated(highSETD2)]
-highSETD2 <- KIRC_cpm[,highSETD2]
-anno <- KIRC_cpm[,c(1:5)]
-head(anno) 
+b <-ifelse(b < -3, -3, b)
+b <-ifelse(b > 3, 3, b)
 
-RIG <- c("AGER", "APP", "ATG12", "ATG5", "CASP10", "CASP8", "CHUK", "CREBBP", "CYLD", "DDX58", "DHX58", "EP300", "FADD", "HERC5", "HMGB1", "IFIH1", "IFNA1", "IFNA10", "IFNA14", "IFNA16", "IFNA17", "IFNA2", "IFNA21", "IFNA4", "IFNA5", "IFNA6", "IFNA7", "IFNA8", "IFNB1", "IKBKB", "IKBKE", "IKBKG", "IRF1", "IRF2", "IRF3", "IRF7", "ISG15", "MAP3K1", "MAVS", "NFKB2", "NFKBIA", "NFKBIB", "NLRC5", "NLRX1", "OTUD5", "PCBP2", "PIN1", "RELA", "RIPK1", "RNF125", "RNF135", "RPS27A", "RPS27AP11", "S100A12", "S100B", "SAA1", "SIKE1", "TANK", "TAX1BP1", "TBK1", "TKFC", "TNFAIP3", "TRAF2", "TRAF3", "TRAF6", "TRIM25", "UBA52", "UBA7", "UBE2D1", "UBE2D2", "UBE2D3", "UBE2K", "UBE2L6")
-RIG_anno <- anno[(anno$hgnc_symbol %in% RIG),]
-RIG_ENSG <- as.character(RIG_anno$ensembl_gene_id)
+e <-t(b) 
 
-KIRC_stat <- read.table("../tables/KIRC_SETD2_stats.csv", sep = ",", header = T)
-KIRC_stat <- KIRC_stat[(KIRC_stat$ENSG %in% RIG_ENSG),]
-KIRC_stat <- KIRC_stat[(KIRC_stat$p_adj < 0.05),]
-KIRC_stat <- subset(KIRC_stat, KIRC_stat$fold_change > 1.5 | KIRC_stat$fold_change < 0.67)
-RIG_ENSG <- as.character(KIRC_stat$ENSG)
+d1 <- dist(e, method = "euclidean")
+fit <- hclust(d1, method="ward.D")
+plot(fit) # display dendogram
+fit_den <-as.dendrogram(fit)
 
-KIRC_metadata <- read.table("C:/Users/Hemant Gujar/Desktop/Kidney_cancer/KIRC/RNASeq_EData/metadata/KIRC_metadata_S.csv", sep = ",", header = T)
-KIRC_metadata$TCGA_ID <- gsub(".{1}$", "", KIRC_metadata$TCGA_ID)
-KIRC_metadata <- KIRC_metadata[,c(1,3,8)]
-KIRC_metadata <- KIRC_metadata[!(KIRC_metadata$SETD2_lvl == "mid"),]
-KIRC_metadata <- KIRC_metadata[order(KIRC_metadata$TCGA_ID),]
-KIRC_metadata <- KIRC_metadata[!duplicated(KIRC_metadata$TCGA_ID),]
-KIRC_metadata <- KIRC_metadata[order(KIRC_metadata$SETD2_lvl, decreasing = F),]
-rownames(KIRC_metadata) <- KIRC_metadata$TCGA_ID
-KIRC_metadata <- KIRC_metadata[(KIRC_metadata$sample_type == "Primary"),]
-KIRC_metadata <- KIRC_metadata[,-c(1,2),drop=F]
-metadata <- KIRC_metadata
 
-col_order <- rownames(KIRC_metadata)
+png("TCGA KIRC immune SETD2 Fin.pdf")
+heatmap.2(e, scale="none",col="bluered", density.info="none",trace="none", dendrogram="row", 
+          Rowv=fit_den,  symbreaks=T,keysize = 1, key=T)
 
-# high SETD2 Vs low SETD2
-dim(lowSETD2)
-dim(highSETD2)
-KIRC_cpm_sel <- cbind(lowSETD2, highSETD2)
-KIRC_cpm_sel <- KIRC_cpm_sel[(rownames(KIRC_cpm_sel) %in% RIG_ENSG),]
-KIRC_cpm_sel <- merge(RIG_anno, KIRC_cpm_sel, by.x = "ensembl_gene_id", by.y = "row.names", all = F)
-rownames(KIRC_cpm_sel) <- KIRC_cpm_sel$hgnc_symbol
-KIRC_cpm_sel <- KIRC_cpm_sel[,-c(1:5)]
-
-names(KIRC_cpm_sel) <- gsub(".{1}$", "", names(KIRC_cpm_sel))
-KIRC_cpm_sel <- KIRC_cpm_sel[,col_order]
-
-library(ComplexHeatmap)
-library(circlize)
-hc1 <- HeatmapAnnotation(df = metadata, which = "column", col = list(SETD2_lvl = c("high"="red", "low"="green4")))
-h_RIG_KIRC <- Heatmap(log2(KIRC_cpm_sel + 0.25), km=1, col = colorRamp2(c(3.50, 5.50, 8.00),  c("green4", "white", "red")),
-                      cluster_columns = F, clustering_distance_columns = "euclidean",  
-                      clustering_method_columns = "complete", column_dend_side = c("top"), column_dend_height = unit(10, "mm"),
-                      show_column_dend = TRUE, show_column_names = FALSE, cluster_rows = T, clustering_distance_rows = "euclidean",
-                      clustering_method_rows = "complete", row_dend_side = c("left"), row_dend_width = unit(10, "mm"),
-                      show_row_dend = TRUE, row_dend_reorder = TRUE, row_dend_gp = gpar(), 
-                      column_title = "KIRC", column_title_side = "bottom", row_title = "RIG genes", 
-                      name = "log2cpm", show_row_names = TRUE, top_annotation = hc1)
-draw(h_RIG_KIRC)
-
+dev.off()
 #############################################################################################
 
