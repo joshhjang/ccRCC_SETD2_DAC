@@ -95,8 +95,8 @@ ggplot(tmp, aes(x=SETD2_lvl, y=mean, fill=SETD2_lvl)) + scale_fill_manual(values
   theme_classic() + labs(title="KIRC hERV expression",x="SETD2 lvl", y = "Mean_log2NCount") + theme(plot.title = element_text(hjust = 0.5))
 
 ###########################################################################################
+# Genes involved in KEGG_RIG_I_LIKE_RECEPTOR_SIGNALING_PATHWAY were utilized to generate heatmap of RIG-I pathway
 
-# Genes involved in KEGG_RIG_I_LIKE_RECEPTOR_SIGNALING_PATHWAY
 tum <- read.delim("KIRC_RNA_Final-Highlow.txt",head=TRUE,sep="\t")
 head(tum)
 
