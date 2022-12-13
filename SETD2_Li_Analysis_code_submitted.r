@@ -1097,10 +1097,6 @@ Heatmap(df.OG2, column_title = "Timepoint",name= "O786 TEs\n(CPM)",col = colorRa
 
 
 #######Identify Activated TEs (>1cpm) in O786 EV and KO COMPARISION###############
-TE_cpm_anno_ave_O786 <- TE_cpm_anno_ave[,c(1:10,23:30)]
-filter_1cpm <- which(apply(TE_cpm_anno_ave_O786[,11:18], 1, function (x) (max(x)>=1))) #some TEs are not 1cpm in 786-O, but might be included due to all cell line filter
-TE_cpm_anno_ave_O786 <- TE_cpm_anno_ave_O786[filter_1cpm,] 
-
 TE_cpm_anno_ave_O786_intron <-TE_cpm_anno_ave_O786[TE_cpm_anno_ave_O786$Anno2 == "intron",]
 TE_cpm_anno_ave_O786_intron<-TE_cpm_anno_ave_O786_intron[order(TE_cpm_anno_ave_O786_intron$TE_Class,TE_cpm_anno_ave_O786_intron$TE_Family,TE_cpm_anno_ave_O786_intron$TE_Subfamily),] #sort by TE name
 
